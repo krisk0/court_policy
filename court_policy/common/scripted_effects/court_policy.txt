@@ -1,0 +1,278 @@
+﻿# Called by AI once in five years, by player any time
+court_policy_cfg = {
+	# landed character should have capital province, but do it carefully
+	capital_province ?= {
+		save_scope_as = court
+		# scope:court exists for court_policy.01 and all court_policy_ effects
+	}
+
+	if = {
+		limit = { exists = scope:court }
+
+		if = {
+			limit = { is_independent_ruler = yes }
+			# remove vars from baronies that are no longer capitals
+			court_policy_garbage_collection
+		}
+
+		# don't set defaults if vars already set
+		if = {
+			limit = {
+				scope:court = {
+					NOT = {
+						AND = {
+							has_variable = court_policy_fm_sex
+							has_variable = court_policy_homosexual
+							has_variable = court_policy_incest
+							has_variable = court_policy_heal_lycanthrope
+							has_variable = court_policy_heal_vampire
+						}
+					}
+				}
+			}
+			# set defaults depending on faith
+			court_policy_cfg_from_faith = yes
+		}
+
+		if = {
+			limit = { is_ai = no }
+			trigger_event = court_policy.01
+		}
+		else_if = {
+			limit = { ai_rationality >= high_positive_rationality }
+
+			# highly rational choose to not heal good diseases
+			court_policy_cfg_rational = yes
+		}
+		else_if = {
+			# slightly rational leave defaults as they are, stupid set all to 50%
+			if = {
+				limit = { ai_rationality <= high_negative_rationality }
+				court_policy_cfg_stupid = yes
+			}
+		}
+	}
+}
+
+court_policy_cfg_from_faith = {
+	scope:court = {
+		set_variable = {
+			name = court_policy_fm_sex
+			value = prev.court_policy_fm_sex
+		}
+
+		set_variable = {
+			name = court_policy_homosexual
+			value = prev.court_policy_homosexual
+		}
+		change_variable = {
+			name = court_policy_homosexual
+			# if extramatital sex is completely banned, then homosexual relation
+			#  is banned, too
+			max = var:court_policy_fm_sex
+		}
+
+		set_variable = {
+			name = court_policy_incest
+			value = prev.court_policy_incest
+		}
+		change_variable = {
+			name = court_policy_incest
+			# if extramatital sex is completely banned, then close-relative
+			#  relation is banned, too
+			max = var:court_policy_fm_sex
+		}
+
+		# cannot easily assign variable to value returned by scripted_trigger
+		set_variable = court_policy_heal_lycanthrope
+		if = {
+			limit = {
+				NOT = {
+					prev = { court_policy_heal_lycanthrope = yes }
+				}
+			}
+			set_variable = {
+				name = court_policy_heal_lycanthrope
+				value = no
+			}
+		}
+
+		set_variable = court_policy_heal_vampire
+		if = {
+			limit = {
+				NOT = {
+					prev = { court_policy_heal_vampire = yes }
+				}
+			}
+			set_variable = {
+				name = court_policy_heal_vampire
+				value = no
+			}
+		}
+	}
+}
+
+court_policy_cfg_rational = {
+	scope:court = {
+		set_variable = {
+			name = court_policy_heal_lycanthrope
+			value = no
+		}
+		set_variable = {
+			name = court_policy_heal_vampire
+			value = no
+		}
+	}
+}
+
+court_policy_cfg_stupid = {
+	scope:court = {
+		set_variable = {
+			name = court_policy_fm_sex
+			value = 50
+		}
+		set_variable = {
+			name = court_policy_homosexual
+			value = 50
+		}
+		set_variable = {
+			name = court_policy_incest
+			value = 50
+		}
+		#random_bool = { WHAT = court_policy_heal_lycanthrope }
+		# does not work, or I don't know how to implement. Writing stupid code
+
+		set_variable = court_policy_heal_lycanthrope
+		random = {
+			chance = 50
+			set_variable = {
+				name court_policy_heal_lycanthrope
+				value = no
+			}
+		}
+
+		set_variable = court_policy_heal_vampire
+		random = {
+			chance = 50
+			set_variable = {
+				name court_policy_heal_vampire
+				value = no
+			}
+		}
+	}
+}
+
+court_policy_toggle = {
+	if = {
+		limit = { $WHAT$ = 0 }
+		scope:court = {
+			court_policy_toggle_integer = { WHAT = court_policy_fm_sex }
+		}
+	}
+	else_if = {
+		limit = { $WHAT$ = 1 }
+		scope:court = {
+			court_policy_toggle_integer = {
+				WHAT = court_policy_homosexual
+			}
+		}
+	}
+	else_if = {
+		limit = { $WHAT$ = 2 }
+		scope:court = {
+			court_policy_toggle_integer = { WHAT = court_policy_incest }
+		}
+	}
+	else_if = {
+		limit = { $WHAT$ = 3 }
+		scope:court = {
+			court_policy_toggle_bool = { WHAT = court_policy_heal_lycanthrope }
+		}
+	}
+	else_if = {
+		limit = { $WHAT$ = 4 }
+		scope:court = {
+			court_policy_toggle_bool = { WHAT = court_policy_heal_vampire }
+		}
+	}
+}
+
+court_policy_toggle_integer = {
+	change_variable = {
+		name = $WHAT$
+		add = 50
+	}
+	if = {
+		limit = { var:$WHAT$ > 100 }
+		set_variable = {
+			name = $WHAT$
+			value = 0
+		}
+	}
+}
+
+court_policy_toggle_bool = {
+	if = {
+		limit = { var:$WHAT$ = yes }
+		set_variable = {
+			name = $WHAT$
+			value = no
+		}
+	}
+	else = {
+		set_variable = $WHAT$
+	}
+}
+
+# Garbage collection once every 5 years. Complexity: O(baronies count)
+court_policy_garbage_collection = {
+	every_realm_province = {
+		limit = {
+			has_variable = court_policy_fm_sex
+			NOT = { is_a_capital = yes } 
+		}
+		remove_variable = court_policy_fm_sex
+		remove_variable ?= court_policy_homosexual
+		remove_variable ?= court_policy_incest
+		remove_variable ?= court_policy_heal_lycanthrope
+	}
+}
+
+# They say unused scripts are not loaded to memory. Thus no need to comment-out
+#  the script.
+court_policy_dump_baronies = {
+	capital_county.title_province = {
+		prev.capital_province = {
+			court_policy_show_province = yes
+		}
+	}
+	error_log = "that was capital, now other provinces"
+	every_realm_province = {
+		# all provinces including capital
+		court_policy_show_province = yes
+	}
+}
+
+court_policy_show_province = {
+	province_owner ?= { error_log = court_policy_owner_is }
+	error_log = court_policy_province_is
+	if = {
+		limit = { has_variable = court_policy_fm_sex }
+		error_log = "has variable"
+	}
+	else = {
+		error_log = "no variable"
+	}
+	if = {
+		limit = { is_a_capital = yes }
+		error_log = "is a capital"
+	}
+	else = {
+		error_log = "is not a capital"
+	}
+}
+
+#set_variable = {
+#    name = title_id_num
+#    value = title:This.GetName  # Returns internal numeric ID ?
+#}

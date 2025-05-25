@@ -1,0 +1,60 @@
+﻿court_policy_decision = {
+	picture = {
+		reference = "gfx/interface/illustrations/decisions/decision_personal_religious.dds"
+	}
+
+	is_shown = {
+		is_landed = yes
+	}
+
+	effect = {
+		court_policy_cfg = yes
+	}
+
+	ai_check_interval = 60
+	ai_will_do = { base = 100 }
+}
+
+# Any landed character will set their policy, in a few months.
+# Error messages on game load concering court_policy_decision_ai should be
+#  ignored
+court_policy_decision_ai = {
+	is_shown = { is_ai = yes }
+	is_valid = {
+		is_landed = yes
+		is_ai = yes
+		exists = capital_province
+		NOT = {
+			exists = capital_province.var:court_policy_fm_sex
+		}
+	}
+
+	effect = {
+		court_policy_cfg = yes
+	}
+
+	ai_check_interval = 1
+	# probability less than 100% for perfomance reasons
+	ai_will_do = { base = 40 }
+}
+
+# When running the decision, multiple errors are reported, like below. Those
+#  errors are harmless, they only mean "failed to build tooltip or description"
+#[11:46:18][E][jomini_script_system.cpp:284]: Script system error! (while building tooltip/description)
+#  Error: Failed to fetch variable for 'court_policy_homosexual' due to not being set
+#  Script location: file: common/scripted_effects/court_policy.txt line: 80 (court_policy_cfg_from_faith)
+#    file: common/scripted_effects/court_policy.txt line: 28 (court_policy_cfg)
+#    file: common/decisions/court_policy.txt line: 10 (court_policy_decision:effect)
+#court_policy_debug = {
+#	picture = {
+#		reference = "gfx/interface/illustrations/decisions/decision_personal_religious.dds"
+#	}
+#	is_valid = {
+#		is_landed = yes
+#		is_ai = no
+#	}
+#
+#	effect = {
+#		court_policy_dump_baronies = yes
+#	}
+#}

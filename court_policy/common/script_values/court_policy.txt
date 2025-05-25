@@ -1,0 +1,55 @@
+﻿# return 100 or 50 0, 100 = yes of course, 50 = maybe, 0 = never
+
+court_policy_fm_sex = {
+    faith = {
+        if = {
+            limit = {
+                has_doctrine = doctrine_adultery_men_accepted
+                has_doctrine = doctrine_adultery_women_accepted
+            }
+            add = 100
+        }
+        else_if = {
+            limit = {
+                OR = {
+                    has_doctrine = doctrine_adultery_men_accepted
+                    has_doctrine = doctrine_adultery_men_shunned
+                }
+                OR = {
+                    has_doctrine = doctrine_adultery_women_accepted
+                    has_doctrine = doctrine_adultery_women_shunned
+                }
+            }
+            add = 50
+        }
+    }
+}
+
+court_policy_homosexual = {
+    faith = {
+        if = {
+            limit = {
+                has_doctrine = doctrine_homosexuality_accepted
+            }
+            add = 100
+        }
+        else_if = {
+            limit = {
+                has_doctrine = doctrine_homosexuality_shunned
+            }
+            add = 50
+        }
+    }
+}
+
+# simplication: only check if unrestricted incest allowed
+court_policy_incest = {
+    faith = {
+        if =  {
+            limit = {
+                has_doctrine_parameter = consanguinity_unrestricted_incest
+            }
+            add = 100
+        }
+    }
+}

@@ -1,0 +1,23 @@
+﻿l_english:
+
+ court_policy_decision:0 "Define court policy"
+ court_policy_decision_confirm:0 "Yes, define the 5 parameters"
+ court_policy_decision_desc:0 "Define court policy on exramarital sex and some disease healing"
+ court_policy_decision_tooltip:0 "Define 5 parameters of court policy"
+
+ court_policy.01.t:0 "$court_policy_decision$"
+ court_policy.01.d:0 "Define 5 parameters of court policy, 0=never, 100=sure\nPress #E done#! when done."
+ court_policy.01.toggle0:0 "man-to-woman sex [court.MakeScope.Var('court_policy_fm_sex').GetValue|P]"
+ court_policy.01.toggle1:0 "man-to-man, woman-to-woman sex [court.MakeScope.Var('court_policy_homosexual').GetValue|P]"
+ court_policy.01.toggle2:0 "close relative's sex [court.MakeScope.Var('court_policy_incest').GetValue|P]"
+ court_policy.01.pos.toggle3:0 "sanies lupinus healing #P allowed#!"
+ court_policy.01.neg.toggle3:0 "sanies lupinus healing #P banned#!"
+ court_policy.01.pos.toggle4:0 "sanguinare vampiris healing #P allowed#!"
+ court_policy.01.neg.toggle4:0 "sanguinare vampiris healing #P banned#!"
+
+ court_policy_debug:0 "Court policy debug"
+ court_policy_debug_confirm:0 "$court_policy_debug$"
+ court_policy_debug_desc:0 "$court_policy_debug$"
+ court_policy_debug_tooltip:0 "$court_policy_debug$"
+ court_policy_owner_is:0 "\n\n\nLand owner [THIS.Char.GetShortUIName] = [THIS.Char.GetShortUINameNoTooltip], title [THIS.Char.GetTitleAsNameNoTooltip]"
+ court_policy_province_is:0 "Province: [THIS.Province.GetName]"

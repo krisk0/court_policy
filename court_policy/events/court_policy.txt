@@ -1,0 +1,100 @@
+﻿namespace = court_policy
+
+court_policy.01 = {
+	theme = realm
+	title = court_policy.01.t
+	desc = court_policy.01.d
+
+	left_portrait = {
+		character = root
+		animation = personality_cynical
+	}
+
+	immediate = {
+		primary_title.title_capital_county = {
+			save_temporary_scope_as = capital
+		}
+	}
+
+	option = {
+		name = court_policy.01.toggle0
+		court_policy_toggle = { WHAT = 0 }
+		trigger_event = court_policy.01
+	}
+	option = {
+		name = court_policy.01.toggle1
+		court_policy_toggle = { WHAT = 1 }
+		trigger_event = court_policy.01
+	}
+	option = {
+		name = court_policy.01.toggle2
+		court_policy_toggle = { WHAT = 2 }
+		trigger_event = court_policy.01
+	}
+
+	option = {
+		trigger = {
+			scope:court.var:court_policy_heal_lycanthrope = yes
+		}
+		name = court_policy.01.pos.toggle3
+		court_policy_toggle = { WHAT = 3 }
+		trigger_event = court_policy.01
+	}
+	option = {
+		trigger = {
+			scope:court.var:court_policy_heal_lycanthrope = no
+		}
+		name = court_policy.01.neg.toggle3
+		court_policy_toggle = { WHAT = 3 }
+		trigger_event = court_policy.01
+	}
+
+	option = {
+		trigger = {
+			scope:court.var:court_policy_heal_vampire = yes
+		}
+		name = court_policy.01.pos.toggle4
+		court_policy_toggle = { WHAT = 4 }
+		trigger_event = court_policy.01
+	}
+	option = {
+		trigger = {
+			scope:court.var:court_policy_heal_vampire = no
+		}
+		name = court_policy.01.neg.toggle4
+		court_policy_toggle = { WHAT = 4 }
+		trigger_event = court_policy.01
+	}
+
+	option = {
+		name = DONE
+#		trigger_event = {
+#			# check if scope disappears and is_a_capital function works
+#			id = court_policy.02
+#		}
+	}
+}
+
+#court_policy.02 = {
+#	hidden = yes
+#
+#	immediate = {
+#		if = {
+#			limit = { exists = scope:court }
+#			error_log = "court_policy.02: scope survived"
+#		}
+#		else = {
+#			error_log = "court_policy.02: scope died"
+#		}
+#
+#		capital_province ?= {
+#			if = {
+#				limit = { is_a_capital = yes }
+#				error_log = "court_policy.02: is_a_capital positive"
+#			}
+#			else = {
+#				error_log = "court_policy.02: is_a_capital negative"
+#			}
+#		}
+#	}
+#}

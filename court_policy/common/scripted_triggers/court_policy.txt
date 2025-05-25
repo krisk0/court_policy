@@ -1,0 +1,18 @@
+﻿# do not check if lycanthrophy is shunned
+court_policy_heal_lycanthrope = {
+    faith = {
+        NOT = { has_doctrine = doctrine_lycanthropy_accepted }
+    }
+}
+
+# do not check if vampirism is shunned
+court_policy_heal_vampire = {
+    faith = {
+        NOT = { has_doctrine = doctrine_vampirism_accepted }
+    }
+}
+
+is_a_capital = {
+    exists = province_owner
+    province_owner = { capital_province = prev }
+}
