@@ -1,10 +1,10 @@
 # Court Policy
 
-Disables certain events and options unappropriate for court owner's religion. Allows AI or human player to define their own court policy.
+Disables certain events and options unappropriate for court owner's religion or policy. Allows AI or human player to define their own court policy.
 
 ## WIP
 
-$${\color{red}Main \space functionality \space not \space implemented.\space$$
+$${\color{red}Main \space functionality \space not \space implemented.\space}$$
 
 Only setting/unsetting parameters works.
 
