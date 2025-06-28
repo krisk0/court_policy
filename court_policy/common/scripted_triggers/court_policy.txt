@@ -1,18 +1,32 @@
 ﻿# do not check if lycanthrophy is shunned
 court_policy_heal_lycanthrope = {
-    faith = {
-        NOT = { has_doctrine = doctrine_lycanthropy_accepted }
-    }
+	faith = {
+		NOT = { has_doctrine = doctrine_lycanthropy_accepted }
+	}
 }
 
 # do not check if vampirism is shunned
 court_policy_heal_vampire = {
-    faith = {
-        NOT = { has_doctrine = doctrine_vampirism_accepted }
-    }
+	faith = {
+		NOT = { has_doctrine = doctrine_vampirism_accepted }
+	}
 }
 
 is_a_capital = {
-    exists = province_owner
-    province_owner = { capital_province = prev }
+	exists = province_owner
+	province_owner = { capital_province = prev }
+}
+
+# yes iff scope:owner and scope:target are of same sex
+is_same_sex_as = {
+	OR = {
+		AND = {
+			scope:owner = { is_male = yes }
+			scope:target = { is_male = yes }
+		}
+		AND = {
+			scope:owner = { is_female = yes }
+			scope:target = { is_female = yes }
+		}
+	}
 }

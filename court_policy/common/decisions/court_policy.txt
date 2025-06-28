@@ -11,6 +11,7 @@
 		court_policy_cfg = yes
 	}
 
+	# AI player revises court policy in 5 years
 	ai_check_interval = 60
 	ai_will_do = { base = 100 }
 }

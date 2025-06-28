@@ -21,3 +21,6 @@
  court_policy_debug_tooltip:0 "$court_policy_debug$"
  court_policy_owner_is:0 "\n\n\nLand owner [THIS.Char.GetShortUIName] = [THIS.Char.GetShortUINameNoTooltip], title [THIS.Char.GetTitleAsNameNoTooltip]"
  court_policy_province_is:0 "Province: [THIS.Province.GetName]"
+
+ seduce_outcome.3900.forbid:0 "How dare they!"
+ seduce_outcome.3900.allow:0 "I forgive them"

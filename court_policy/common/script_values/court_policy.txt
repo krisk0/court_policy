@@ -1,55 +1,122 @@
 ﻿# return 100 or 50 0, 100 = yes of course, 50 = maybe, 0 = never
 
 court_policy_fm_sex = {
-    faith = {
-        if = {
-            limit = {
-                has_doctrine = doctrine_adultery_men_accepted
-                has_doctrine = doctrine_adultery_women_accepted
-            }
-            add = 100
-        }
-        else_if = {
-            limit = {
-                OR = {
-                    has_doctrine = doctrine_adultery_men_accepted
-                    has_doctrine = doctrine_adultery_men_shunned
-                }
-                OR = {
-                    has_doctrine = doctrine_adultery_women_accepted
-                    has_doctrine = doctrine_adultery_women_shunned
-                }
-            }
-            add = 50
-        }
-    }
+	faith = {
+		if = {
+			limit = {
+				has_doctrine = doctrine_adultery_men_accepted
+				has_doctrine = doctrine_adultery_women_accepted
+			}
+			add = 100
+		}
+		else_if = {
+			limit = {
+				OR = {
+					has_doctrine = doctrine_adultery_men_accepted
+					has_doctrine = doctrine_adultery_men_shunned
+				}
+				OR = {
+					has_doctrine = doctrine_adultery_women_accepted
+					has_doctrine = doctrine_adultery_women_shunned
+				}
+			}
+			add = 50
+		}
+	}
 }
 
 court_policy_homosexual = {
-    faith = {
-        if = {
-            limit = {
-                has_doctrine = doctrine_homosexuality_accepted
-            }
-            add = 100
-        }
-        else_if = {
-            limit = {
-                has_doctrine = doctrine_homosexuality_shunned
-            }
-            add = 50
-        }
-    }
+	faith = {
+		if = {
+			limit = {
+				has_doctrine = doctrine_homosexuality_accepted
+			}
+			add = 100
+		}
+		else_if = {
+			limit = {
+				has_doctrine = doctrine_homosexuality_shunned
+			}
+			add = 50
+		}
+	}
 }
 
 # simplication: only check if unrestricted incest allowed
 court_policy_incest = {
-    faith = {
-        if =  {
-            limit = {
-                has_doctrine_parameter = consanguinity_unrestricted_incest
-            }
-            add = 100
-        }
-    }
+	faith = {
+		if = {
+			limit = {
+				has_doctrine_parameter = consanguinity_unrestricted_incest
+			}
+			add = 100
+		}
+	}
+}
+
+# Runs in liege context. Available scopes:
+#  scope:owner
+#  scope:target
+#  scope:target_liege
+#  scope:capital -- capital barony
+# Returns 100 if liege allows, 0 if liege disallows, 50 if undecided
+# Simplification: distant relative sex is allowed
+court_policy_liege_attitude_to_adultery = {
+	if = {
+		limit = {
+		  scope:owner = { is_close_family_of = scope:target }
+		}
+		value = court_policy_liege_a2a_related
+		if = {
+			# if homosexuality is forbidden, return zero
+			limit = { is_same_sex_as = yes }
+			max = court_policy_liege_a2a_samesex
+		}
+	}
+	else_if = {
+		limit = { is_same_sex_as = yes }
+		value = court_policy_liege_a2a_samesex
+	}
+	else = {
+		value = court_policy_liege_a2a_general
+	}
+}
+
+court_policy_liege_a2a_general = {
+	capital_province = {
+		if = {
+			limit = { has_variable = court_policy_fm_sex }
+			value = var:court_policy_fm_sex
+		}
+		else = {
+			# The variable is unset, use default value suggested by faith
+			value = prev.court_policy_fm_sex
+		}
+	}
+}
+
+court_policy_liege_a2a_samesex = {
+	capital_province = {
+		if = {
+			limit = { has_variable = court_policy_homosexual }
+			value = var:court_policy_homosexual
+		}
+		else = {
+			# The variable is unset, use default value suggested by faith
+			value = prev.court_policy_homosexual
+		}
+	}
+}
+
+court_policy_liege_a2a_related = {
+	capital_province = {
+		if = {
+			limit = { has_variable = court_policy_incest }
+			value = var:court_policy_incest
+		}
+		else = {
+			# The variable is unset, use default value suggested by faith
+			value = prev.court_policy_incest
+		}
+	}
 }

@@ -13,6 +13,8 @@ court_policy_cfg = {
 			limit = { is_independent_ruler = yes }
 			# remove vars from baronies that are no longer capitals
 			court_policy_garbage_collection
+			# if garbage collection somehow fails, then some provinces might
+			#  have 5 unused variables each, not a big memory leak
 		}
 
 		# don't set defaults if vars already set
@@ -229,12 +231,13 @@ court_policy_garbage_collection = {
 	every_realm_province = {
 		limit = {
 			has_variable = court_policy_fm_sex
-			NOT = { is_a_capital = yes } 
+			NOT = { is_a_capital = yes }
 		}
 		remove_variable = court_policy_fm_sex
 		remove_variable ?= court_policy_homosexual
 		remove_variable ?= court_policy_incest
 		remove_variable ?= court_policy_heal_lycanthrope
+		remove_variable ?= court_policy_heal_vampire
 	}
 }
 
