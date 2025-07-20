@@ -30,3 +30,64 @@ is_same_sex_as = {
 		}
 	}
 }
+
+# Runs in liege context. Available scopes:
+#  scope:sick_character
+#  scope:disease_type
+court_policy_heal_em = {
+	trigger_if = {
+		limit = { NOT = { exists = capital_province } }
+		# Liege just lost his status, or is unlanded.
+		# No capital, no ambulance, no way to heal sanguinare_vampiris or
+		#  sanies_lupinus, but can attempt to heal other diseases
+		NOR = {
+			scope:disease_type = flag:sanguinare_vampiris
+			scope:disease_type = flag:sanies_lupinus
+		}
+	}
+	trigger_if = {
+		limit = { scope:disease_type = flag:sanguinare_vampiris }
+		court_policy_heal_vampire_uncache = yes
+	}
+	trigger_if = {
+		limit = { scope:disease_type = flag:sanies_lupinus }
+		court_policy_heal_lycanthrope_uncache = yes
+	}
+	# For other diseases, no court policy
+	trigger_else = { always = yes }
+}
+
+court_policy_heal_vampire_uncache = {
+	capital_province = {
+		# TODO: how to return value of yes-no variable? Here and in trigger below
+		trigger_if = {
+			limit = { var:court_policy_heal_vampire ?= yes }
+			always = yes
+		}
+		trigger_if = {
+			limit = { var:court_policy_heal_vampire ?= no }
+			always = no
+		}
+		trigger_else = {
+			# The variable is unset, use value suggested by faith
+			prev = { court_policy_heal_vampire = yes }
+		}
+	}
+}
+
+court_policy_heal_lycanthrope_uncache = {
+	capital_province = {
+		trigger_if = {
+			limit = { var:court_policy_heal_lycanthrope ?= yes }
+			always = yes
+		}
+		trigger_if = {
+			limit = { var:court_policy_heal_lycanthrope ?= no }
+			always = no
+		}
+		trigger_else = {
+			# The variable is unset, use value suggested by faith
+			prev = { court_policy_heal_lycanthrope = yes }
+		}
+	}
+}

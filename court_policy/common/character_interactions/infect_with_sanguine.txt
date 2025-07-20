@@ -1,0 +1,37 @@
+﻿sanguine_infect = {
+	category = interaction_debug_main
+
+	use_diplomatic_range = yes
+	ignores_pending_interaction_block = yes
+
+	is_shown = {
+		always = yes
+	}
+
+	auto_accept = yes
+
+	on_accept = {
+		scope:recipient = {
+				contract_disease_effect = { DISEASE = sanguinare_vampiris TREATMENT_EVENT = yes }
+		}
+	}
+}
+
+lupinus_infect = {
+	category = interaction_debug_main
+
+	use_diplomatic_range = yes
+	ignores_pending_interaction_block = yes
+
+	is_shown = {
+		always = yes
+	}
+
+	auto_accept = yes
+
+	on_accept = {
+		scope:recipient = {
+				contract_disease_effect = { DISEASE = sanies_lupinus TREATMENT_EVENT = yes }
+		}
+	}
+}

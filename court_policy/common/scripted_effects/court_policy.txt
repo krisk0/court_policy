@@ -1,6 +1,7 @@
 ﻿# Called by AI once in five years, by player any time
 court_policy_cfg = {
 	# landed character should have capital province, but do it carefully
+
 	capital_province ?= {
 		save_scope_as = court
 		# scope:court exists for court_policy.01 and all court_policy_ effects
@@ -10,9 +11,11 @@ court_policy_cfg = {
 		limit = { exists = scope:court }
 
 		if = {
+			# Lazy garbage collection, happens only for indepenedent rulers who
+			#  chose to change their policy
 			limit = { is_independent_ruler = yes }
 			# remove vars from baronies that are no longer capitals
-			court_policy_garbage_collection
+			court_policy_garbage_collection = yes
 			# if garbage collection somehow fails, then some provinces might
 			#  have 5 unused variables each, not a big memory leak
 		}
@@ -67,22 +70,25 @@ court_policy_cfg_from_faith = {
 			name = court_policy_homosexual
 			value = prev.court_policy_homosexual
 		}
-		change_variable = {
-			name = court_policy_homosexual
-			# if extramatital sex is completely banned, then homosexual relation
-			#  is banned, too
-			max = var:court_policy_fm_sex
+		# Test shows that max = var:court_policy_fm_sex does not work, trying if instead
+		if = {
+			limit = { var:court_policy_fm_sex < var:court_policy_homosexual }
+			set_variable = {
+				name = court_policy_homosexual
+				value = var:court_policy_fm_sex
+			}
 		}
 
 		set_variable = {
 			name = court_policy_incest
 			value = prev.court_policy_incest
 		}
-		change_variable = {
-			name = court_policy_incest
-			# if extramatital sex is completely banned, then close-relative
-			#  relation is banned, too
-			max = var:court_policy_fm_sex
+		if = {
+			limit = { var:court_policy_fm_sex < var:court_policy_incest }
+			set_variable = {
+				name = court_policy_incest
+				value = var:court_policy_fm_sex
+			}
 		}
 
 		# cannot easily assign variable to value returned by scripted_trigger
@@ -279,3 +285,76 @@ court_policy_show_province = {
 #    name = title_id_num
 #    value = title:This.GetName  # Returns internal numeric ID ?
 #}
+
+# Runs in context of sick character.
+# Scope value:
+#  scope:disease_type
+# Either triggers health.2201, or health.3101, or does nothing.
+#
+# Unlanded character w/o liege gets no treatment. If liege forbids, no
+#  treatment.
+court_policy_maybe_heal = {
+	if = {
+		limit = { scope:disease_type = flag:sanies_lupinus }
+		error_log = "_maybe_heal: got sanies_lupinus"
+	}
+	else_if = {
+		limit = { scope:disease_type = flag:sanguinare_vampiris }
+		error_log = "_maybe_heal: got sanguinare_vampiris"
+	}
+	else = {
+		error_log = "_maybe_heal: unknown disease"
+	}
+	if = {
+		# No physician, no treatment
+		limit = { court_physician_available_trigger = yes }
+		error_log = "_maybe_heal: got physician"
+		save_scope_as = sick_character
+		save_court_physician_as_effect = { SCOPE_NAME = physician }
+		# TODO: if has_good_disease_treatment_trigger, then maybe heal sanies_lupinus
+		#  or sanguinare_vampiris
+		if = {
+			limit = {
+				is_landed = yes
+				court_policy_heal_em = yes
+			}
+			error_log = "_maybe_heal: landed"
+			# health.3101: choose healing variant for yourself.
+			trigger_event = health.3101
+		}
+		else = {
+			liege ?= {
+				# Physician and liege exist, physician is available.
+				# health.2201: liege decides if he wants the courtier healed.
+				error_log = "_maybe_heal: unlanded"
+				trigger_event = health.2201
+			}
+		}
+	}
+}
+
+court_policy_contract_disease = {
+	# TREATMENT_EVENT = yes, so contract_disease_effect might start healing with
+	#  event chain:
+	#
+	#  contract_disease_effect -> health.3100 -> court_policy_maybe_heal ->
+	#   .3101 or .2201 or nothing
+	#
+	#  The chain is delayed (by up to 250 days), so we force court_policy_maybe_heal
+	#   right now
+
+	contract_disease_effect = { DISEASE = $DISEASE$ TREATMENT_EVENT = yes }
+
+	if = {
+		# The disease might not be contracted, if root is immune
+		limit = {
+			has_trait = $DISEASE$
+		}
+		save_scope_value_as = {
+			name = disease_type
+			value = flag:$DISEASE$
+		}
+		# Either do nothing, or trigger event health.3101 or health.2201
+		court_policy_maybe_heal = yes
+	}
+}

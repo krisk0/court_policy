@@ -1,5 +1,4 @@
 ﻿# return 100 or 50 0, 100 = yes of course, 50 = maybe, 0 = never
-
 court_policy_fm_sex = {
 	faith = {
 		if = {
@@ -42,7 +41,7 @@ court_policy_homosexual = {
 	}
 }
 
-# simplication: only check if unrestricted incest allowed
+# simplification: only check if unrestricted incest allowed
 court_policy_incest = {
 	faith = {
 		if = {
@@ -117,6 +116,48 @@ court_policy_liege_a2a_related = {
 		else = {
 			# The variable is unset, use default value suggested by faith
 			value = prev.court_policy_incest
+		}
+	}
+}
+
+# Called from health.1007 to calculate weight multiplier
+court_policy_cancer_value = {
+	value = ek_human_age_equivalent
+	save_temporary_value_as = my_age
+	# default for 40yo : 1
+	value = 1
+	if = {
+		# 0.1 if age < 25
+		limit = { scope:my_age < 25 }
+		value = 0.1
+	}
+	else_if = {
+		# 0.3 in range 25..35
+		limit = { scope:my_age < 35 }
+		value = 0.3
+	}
+	# stays 1 if age < 55, might change if >= 55
+	else_if = {
+		limit = { scope:my_age >= 55 }
+		if = {
+			# female, age >= 55: factor of 2
+			limit = { is_female = yes }
+			value = 2
+		}
+		else_if = {
+			# male, age > 55: factor of 3
+			limit = { scope:my_age > 55 }
+			value = 3
+		}
+		# multiply by 2 if >= 65
+		if = {
+			limit = { scope:my_age >= 65 }
+			multiply = 2
+		}
+		# multiply by 2 if >= 70
+		if = {
+			limit = { scope:my_age >= 70 }
+			multiply = 2
 		}
 	}
 }

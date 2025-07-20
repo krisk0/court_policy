@@ -1,7 +1,7 @@
 version="1.0"
 tags={
-	"Fixes"
+	"fixes"
 }
 name="Court policy"
 supported_version="1.15.*"
-path="mod/court_policy/"
+path="mod/court_policy"

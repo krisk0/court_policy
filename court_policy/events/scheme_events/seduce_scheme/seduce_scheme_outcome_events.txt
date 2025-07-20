@@ -1898,7 +1898,7 @@ seduce_outcome.2900 = { #by Mathilda Bjarnehed
 			trigger_event = seduce_outcome.3901
 		}
 	}
-	
+
 	after = {
 		scope:owner = {
 			remove_variable = court_policy_liege_attitude_to_adultery

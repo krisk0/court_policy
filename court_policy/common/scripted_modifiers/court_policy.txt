@@ -1,0 +1,31 @@
+﻿# Called from health.1007 to calculate weight multiplier
+court_policy_cancer_modifier = {
+	modifier = { #Children almost never have it
+		var:my_age < 25
+		factor = 0.1
+	}
+	modifier = { #Very uncommon before 30
+		var:my_age >= 25
+		var:my_age < 35
+		factor = 0.3
+	}
+	modifier = { #Increasingly common after 55
+		is_male = yes
+		# EK has > 55 for men, >= 55 for women. This is not a bug, this is feature
+		var:my_age > 55 #Males have a higher risk later in life
+		factor = 3
+	}
+	modifier = { #Increasingly common after 55
+		var:my_age >= 55
+		is_female = yes
+		factor = 2
+	}
+	modifier = { #Increasingly common after 65
+		var:my_age >= 60
+		factor = 2
+	}
+	modifier = { #Increasingly common after 70
+		var:my_age >= 70
+		factor = 2
+	}
+}
