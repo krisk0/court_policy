@@ -620,7 +620,10 @@ ek_health.2002 = {
 
 	immediate = {
 		give_vampire_secret_or_trait_effect = yes
-		remove_trait = sanguinare_vampiris
+		# court_policy changes: heal diseases vampire is immune to, in accordance
+		#  with Skyrim lore
+		#remove_trait = sanguinare_vampiris - no longer requred
+		magical_cure_disease = yes
 	}
 
 	option = { # oh well

@@ -19,7 +19,7 @@
  court_policy_debug_confirm:0 "$court_policy_debug$"
  court_policy_debug_desc:0 "$court_policy_debug$"
  court_policy_debug_tooltip:0 "$court_policy_debug$"
- court_policy_owner_is:0 "\n\n\nLand owner [THIS.Char.GetShortUIName] = [THIS.Char.GetShortUINameNoTooltip], title [THIS.Char.GetTitleAsNameNoTooltip]"
+ court_policy_owner_is:0 "\n\n\nLand owner [THIS.Char.GetUINameNoTooltip], title [THIS.Char.GetTitleAsNameNoTooltip]"
  court_policy_province_is:0 "Province: [THIS.Province.GetName]"
 
  seduce_outcome.3900.forbid:0 "How dare they!"
@@ -35,3 +35,4 @@
  court_policy_infect_self_lyca_tooltip:0 "$court_policy_infect_self_lyca$"
  sanguine_infect:0 "Infect with sanguinare vampiris"
  lupinus_infect:0 "Infect with sanies lupinus"
+ randomize:0 "Random choice"

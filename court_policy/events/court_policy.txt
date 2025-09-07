@@ -66,6 +66,13 @@ court_policy.01 = {
 		trigger_event = court_policy.01
 	}
 
+	# check if random_bool works
+	#option = {
+	#	name = randomize
+	#	court_policy_cfg_stupid = yes
+	#	trigger_event = court_policy.01
+	#}
+
 	option = {
 		name = DONE
 #		trigger_event = {

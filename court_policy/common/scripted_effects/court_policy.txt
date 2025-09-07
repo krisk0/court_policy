@@ -40,6 +40,7 @@ court_policy_cfg = {
 		}
 
 		if = {
+			# human player sets custom values
 			limit = { is_ai = no }
 			trigger_event = court_policy.01
 		}
@@ -59,6 +60,17 @@ court_policy_cfg = {
 	}
 }
 
+court_policy_sanitize = {
+	clamp_variable = {
+		name = court_policy_homosexual
+		max = var:court_policy_fm_sex
+	}
+	clamp_variable = {
+		name = court_policy_incest
+		max = var:court_policy_fm_sex
+	}
+}
+
 court_policy_cfg_from_faith = {
 	scope:court = {
 		set_variable = {
@@ -70,34 +82,21 @@ court_policy_cfg_from_faith = {
 			name = court_policy_homosexual
 			value = prev.court_policy_homosexual
 		}
-		# Test shows that max = var:court_policy_fm_sex does not work, trying if instead
-		if = {
-			limit = { var:court_policy_fm_sex < var:court_policy_homosexual }
-			set_variable = {
-				name = court_policy_homosexual
-				value = var:court_policy_fm_sex
-			}
-		}
+		# Test shows that max = var:court_policy_fm_sex does not work, using clamp
+		#  instead
 
 		set_variable = {
 			name = court_policy_incest
 			value = prev.court_policy_incest
 		}
-		if = {
-			limit = { var:court_policy_fm_sex < var:court_policy_incest }
-			set_variable = {
-				name = court_policy_incest
-				value = var:court_policy_fm_sex
-			}
-		}
+
+		court_policy_sanitize = yes
 
 		# cannot easily assign variable to value returned by scripted_trigger
 		set_variable = court_policy_heal_lycanthrope
 		if = {
 			limit = {
-				NOT = {
-					prev = { court_policy_heal_lycanthrope = yes }
-				}
+				prev = { court_policy_heal_lycanthrope = no }
 			}
 			set_variable = {
 				name = court_policy_heal_lycanthrope
@@ -108,9 +107,7 @@ court_policy_cfg_from_faith = {
 		set_variable = court_policy_heal_vampire
 		if = {
 			limit = {
-				NOT = {
-					prev = { court_policy_heal_vampire = yes }
-				}
+				prev = { court_policy_heal_vampire = no }
 			}
 			set_variable = {
 				name = court_policy_heal_vampire
@@ -147,25 +144,18 @@ court_policy_cfg_stupid = {
 			name = court_policy_incest
 			value = 50
 		}
-		#random_bool = { WHAT = court_policy_heal_lycanthrope }
-		# does not work, or I don't know how to implement. Writing stupid code
+		random_bool = { WHAT = court_policy_heal_lycanthrope }
+		random_bool = { WHAT = court_policy_heal_vampire }
+	}
+}
 
-		set_variable = court_policy_heal_lycanthrope
-		random = {
-			chance = 50
-			set_variable = {
-				name court_policy_heal_lycanthrope
-				value = no
-			}
-		}
-
-		set_variable = court_policy_heal_vampire
-		random = {
-			chance = 50
-			set_variable = {
-				name court_policy_heal_vampire
-				value = no
-			}
+random_bool = {
+	set_variable = $WHAT$
+	random = {
+		chance = 50
+		set_variable = {
+			name = $WHAT$
+			value = no
 		}
 	}
 }
@@ -237,7 +227,7 @@ court_policy_garbage_collection = {
 	every_realm_province = {
 		limit = {
 			has_variable = court_policy_fm_sex
-			NOT = { is_a_capital = yes }
+			is_a_capital = no
 		}
 		remove_variable = court_policy_fm_sex
 		remove_variable ?= court_policy_homosexual
@@ -281,15 +271,239 @@ court_policy_show_province = {
 	}
 }
 
-#set_variable = {
-#    name = title_id_num
-#    value = title:This.GetName  # Returns internal numeric ID ?
-#}
 
 # Runs in context of sick character.
 # Scope value:
 #  scope:disease_type
-# Either triggers health.2201, or health.3101, or does nothing.
+#  scope:physician
+#  scope:sick_character
+# Maybe get rid of sanies_lupinus or sanguinare_vampiris, physician might get
+#  the disease and/or experience or die due to health decrease. Some chance
+#  calculations inspired by mystic_disease_treatment_effect
+court_policy_ongoing_treatment = {
+	save_temporary_scope_value_as = {
+		name = cp_which_disease
+		value = scope:disease_type
+	}
+
+	scope:physician = {
+		mystic_level_up_chance_effect = { CHANCE = 15 }
+	}
+
+	random_list = {
+		1 = { #Success
+			modifier = {
+				scope:physician = {
+					learning >= mediocre_skill_rating
+					learning < medium_skill_rating
+				}
+				factor = 2
+			}
+			modifier = {
+				scope:physician = {
+					learning >= medium_skill_rating
+					learning < decent_skill_rating
+				}
+				factor = 4
+			}
+			modifier = {
+				scope:physician = {
+					learning >= decent_skill_rating
+					learning < high_skill_rating
+				}
+				factor = 7
+			}
+			modifier = {
+				scope:physician = {
+					learning >= high_skill_rating
+				}
+				factor = 10
+			}
+			modifier = {
+				scope:physician = { has_trait = lifestyle_mystic }
+				factor = 2
+			}
+			modifier = {
+				scope:physician = {
+					has_trait_xp = {
+						trait = lifestyle_mystic
+						value >= 50
+					}
+				}
+				factor = 5
+			}
+			modifier = {
+				scope:physician = {
+					has_trait = lifestyle_mystic
+					has_trait_xp = {
+						trait = lifestyle_mystic
+						value >= 50
+					}
+				}
+				factor = 5
+			}
+			# Liege Perk bonus
+			modifier = {
+				scope:physician.liege = {
+					has_perk = anatomical_studies_perk
+				}
+				factor = 2
+			}
+			modifier = { # Bump the death numbers a bit
+				scope:sick_character = { is_ruler = no }
+				factor = 0.8
+			}
+			modifier = { # Pool characters should die more
+				scope:sick_character = { is_pool_character = yes }
+				factor = 0.2
+			}
+
+			#Critical or normal success?
+			random_list = {
+				1 = {
+					modifier = {
+						scope:physician = { has_trait = lifestyle_physician }
+						factor = 1.5
+					}
+					modifier = {
+						scope:physician = {
+							has_trait = lifestyle_physician
+							has_trait_xp = {
+								trait = lifestyle_physician
+								value >= 50
+							}
+						}
+						factor = 2
+					}
+					modifier = {
+						scope:physician = {
+							has_trait = lifestyle_physician
+							has_trait_xp = {
+								trait = lifestyle_physician
+								value >= 50
+							}
+						}
+						factor = 3
+					}
+
+					# Liege Perk bonus
+					modifier = {
+						scope:physician.liege = {
+							has_perk = anatomical_studies_perk
+						}
+						factor = 2
+					}
+					court_policy_ongoing_treatment_success = { CHANCE = 100 }
+				}
+				5 = {
+					court_policy_ongoing_treatment_success = { CHANCE = 20 }
+				}
+			}
+		}
+		10 = { #Failure
+		}
+		5 = { #Failure on purpose
+			trigger = {
+				court_physician_can_fail_on_purpose_trigger = yes
+			}
+			modifier = {
+				OR = {
+					has_relation_rival = scope:physician
+					reverse_opinion = {
+						target = scope:physician
+						value <= -20
+					}
+				}
+				factor = 2
+			}
+			modifier = { #Are they already trying to kill you?
+				add = 40
+				any_targeting_scheme = {
+					scheme_type = murder
+					OR = {
+						scheme_owner = scope:physician
+						any_scheme_agent_character = { this = scope:physician }
+					}
+				}
+			}
+		}
+	}
+
+	# TODO: willing to become lycantrope?
+	# Do it after treatment so physician does not die too early from health drop
+	scope:physician = {
+		if = {
+			limit = { scope:cp_which_disease = flag:sanguinare_vampiris }
+			# 'chance = expression' does not work? Avoid it and use chance = 0
+			#  with modifier = { add ... }
+			random = {
+				chance = 0
+				modifier = {
+					add = court_policy_is_willing_to_become_vampire_chance
+				}
+				court_policy_contract_disease = { DISEASE = sanguinare_vampiris }
+			}
+		}
+	}
+}
+
+
+court_policy_ongoing_treatment_success = {
+	random_list = {
+		0 = {
+			modifier = {
+				add = $CHANCE$
+			}
+			court_policy_remove_useful_disease = yes
+			clear_saved_scope = disease_type
+		}
+		100 = {
+			modifier = {
+				add = -$CHANCE$
+			}
+			# 20% chance to contract the useful disesase
+			random = {
+				chance = 20
+				court_policy_physician_contracts_useful_disease = yes
+			}
+		}
+	}
+}
+
+
+court_policy_remove_useful_disease = {
+	if = {
+		limit = { scope:disease_type = flag:sanies_lupinus }
+		remove_trait_force_tooltip = sanies_lupinus
+	}
+	else_if = {
+		limit = { scope:disease_type = flag:sanguinare_vampiris }
+		remove_trait_force_tooltip = sanguinare_vampiris
+	}
+}
+
+
+court_policy_physician_contracts_useful_disease = {
+	if = {
+		limit = { scope:disease_type = flag:sanies_lupinus }
+		scope:physician = {
+			court_policy_contract_disease = { DISEASE = sanies_lupinus }
+		}
+	}
+	else_if = {
+		limit = { scope:disease_type = flag:sanguinare_vampiris }
+		scope:physician = {
+			court_policy_contract_disease = { DISEASE = sanguinare_vampiris }
+		}
+	}
+}
+
+
+# Runs in context of sick character.
+# Scope value:
+#  scope:disease_type
+# Might trigger health.2201 or health.3101. If there is ongoing successful
+#  treatment, might call court_policy_ongoing_treatment
 #
 # Unlanded character w/o liege gets no treatment. If liege forbids, no
 #  treatment.
@@ -306,55 +520,70 @@ court_policy_maybe_heal = {
 		error_log = "_maybe_heal: unknown disease"
 	}
 	if = {
-		# No physician, no treatment
-		limit = { court_physician_available_trigger = yes }
-		error_log = "_maybe_heal: got physician"
+		# No physician, or court policy disallows -- no treatment
+		limit = {
+			court_physician_available_trigger = yes
+			court_policy_heal_courtier_or_self = yes
+		}
+		error_log = "_maybe_heal: got physician, court policy allows"
 		save_scope_as = sick_character
 		save_court_physician_as_effect = { SCOPE_NAME = physician }
-		# TODO: if has_good_disease_treatment_trigger, then maybe heal sanies_lupinus
-		#  or sanguinare_vampiris
+		# In EK mod, sanies_lupinus and sanguinare_vampiris might get healed
+		#  automatically, even without physician. This mod disables the automation,
+		#  thus greatly decreasing healing chance. To compensate, we give some
+		#  chance to heal the diseases if root is being successfully treated
+		#  already.
 		if = {
 			limit = {
-				is_landed = yes
-				court_policy_heal_em = yes
+				has_good_disease_treatment_trigger = yes
 			}
-			error_log = "_maybe_heal: landed"
-			# health.3101: choose healing variant for yourself.
-			trigger_event = health.3101
+			court_policy_ongoing_treatment = yes
 		}
-		else = {
-			liege ?= {
-				# Physician and liege exist, physician is available.
-				# health.2201: liege decides if he wants the courtier healed.
-				error_log = "_maybe_heal: unlanded"
-				trigger_event = health.2201
+		if = {
+			# on success, court_policy_ongoing_treatment unsets scope:disease_type
+			limit = { exists = scope:disease_type }
+			if = {
+				limit = {
+					is_landed = yes
+				}
+				error_log = "_maybe_heal: landed"
+				# health.3101: choose healing variant for yourself.
+				trigger_event = health.3101
+			}
+			else = {
+				liege ?= {
+					# Physician and liege exist, physician is available.
+					# health.2201: liege decides if he wants the courtier healed.
+					error_log = "_maybe_heal: unlanded"
+					trigger_event = health.2201
+				}
 			}
 		}
 	}
 }
 
+
+# Runs in context of character.
+# Parameters:
+#  DISEASE
 court_policy_contract_disease = {
-	# TREATMENT_EVENT = yes, so contract_disease_effect might start healing with
+	# With TREATMENT_EVENT = yes, contract_disease_effect might start healing with
 	#  event chain:
 	#
 	#  contract_disease_effect -> health.3100 -> court_policy_maybe_heal ->
 	#   .3101 or .2201 or nothing
 	#
 	#  The chain is delayed (by up to 250 days), so we force court_policy_maybe_heal
-	#   right now
-
-	contract_disease_effect = { DISEASE = $DISEASE$ TREATMENT_EVENT = yes }
-
+	#   right now. Therefore treatment event might occur 0, 1 or 2 times.
 	if = {
-		# The disease might not be contracted, if root is immune
-		limit = {
-			has_trait = $DISEASE$
+		limit = { NOT = { has_trait = $DISEASE$ } }
+		contract_disease_effect = { DISEASE = $DISEASE$ TREATMENT_EVENT = yes }
+
+		if = {
+			# The disease was not contracted, if root is immune
+			limit = { has_trait = $DISEASE$	}
+			# Either do nothing, or trigger event health.3101 or health.2201
+			court_policy_maybe_heal = yes
 		}
-		save_scope_value_as = {
-			name = disease_type
-			value = flag:$DISEASE$
-		}
-		# Either do nothing, or trigger event health.3101 or health.2201
-		court_policy_maybe_heal = yes
 	}
 }

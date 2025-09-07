@@ -1,16 +1,18 @@
-﻿# do not check if lycanthrophy is shunned
+﻿# simplification: do not check if lycanthrophy is shunned, just yes or no
 court_policy_heal_lycanthrope = {
 	faith = {
 		NOT = { has_doctrine = doctrine_lycanthropy_accepted }
 	}
 }
 
-# do not check if vampirism is shunned
+
+# simplification: do not check if vampirism is shunned, just yes or no
 court_policy_heal_vampire = {
 	faith = {
 		NOT = { has_doctrine = doctrine_vampirism_accepted }
 	}
 }
+
 
 is_a_capital = {
 	exists = province_owner
@@ -30,6 +32,37 @@ is_same_sex_as = {
 		}
 	}
 }
+
+
+# yes iff scope:adultery_spouse and scope:sex_partner are of same sex
+is_same_sex_as_4001 = {
+	OR = {
+		AND = {
+			scope:adultery_spouse = { is_male = yes }
+			scope:sex_partner = { is_male = yes }
+		}
+		AND = {
+			scope:adultery_spouse = { is_female = yes }
+			scope:sex_partner = { is_female = yes }
+		}
+	}
+}
+
+
+# Runs in liege or courtier context. Available scopes:
+#  scope:disease_type
+court_policy_heal_courtier_or_self = {
+	trigger_if = {
+		limit = { is_landed = yes }
+		court_policy_heal_em = yes
+	}
+	trigger_else = {
+		liege ?= {
+			court_policy_heal_em = yes
+		}
+	}
+}
+
 
 # Runs in liege context. Available scopes:
 #  scope:sick_character
@@ -57,6 +90,7 @@ court_policy_heal_em = {
 	trigger_else = { always = yes }
 }
 
+
 court_policy_heal_vampire_uncache = {
 	capital_province = {
 		# TODO: how to return value of yes-no variable? Here and in trigger below
@@ -64,7 +98,7 @@ court_policy_heal_vampire_uncache = {
 			limit = { var:court_policy_heal_vampire ?= yes }
 			always = yes
 		}
-		trigger_if = {
+		trigger_else_if = {
 			limit = { var:court_policy_heal_vampire ?= no }
 			always = no
 		}
@@ -75,13 +109,14 @@ court_policy_heal_vampire_uncache = {
 	}
 }
 
+
 court_policy_heal_lycanthrope_uncache = {
 	capital_province = {
 		trigger_if = {
 			limit = { var:court_policy_heal_lycanthrope ?= yes }
 			always = yes
 		}
-		trigger_if = {
+		trigger_else_if = {
 			limit = { var:court_policy_heal_lycanthrope ?= no }
 			always = no
 		}
@@ -90,4 +125,42 @@ court_policy_heal_lycanthrope_uncache = {
 			prev = { court_policy_heal_lycanthrope = yes }
 		}
 	}
+}
+
+
+# Available scope:
+#  scope:adultery_spouse
+#  scope:sex_partner (optional)
+#  scope:unsuccessful_sex_attempt (optional)
+# Called either in context of scope:adultery_spouse or scope:sex_partner
+## court_policy changes: return no if court policy allows the kind of sex that
+##  occured
+adultery_4001_can_be_imprisoned_trigger = {
+	# If no capital province, then cannot imprison
+	exists = root.capital_province
+	# If not my subject, cannot imprison
+	root = { allowed_to_imprison_character_trigger = { CHARACTER = prev } }
+	if = {
+		# If partner is known
+		limit = { exists = scope:sex_partner }
+		OR = {
+			# … either this is cheating spouse, …
+			this = scope:adultery_spouse
+			# … or this is sex_partner who really had sex
+			NOT = { exists = scope:unsuccessful_sex_attempt }
+		}
+		set_local_variable = {
+			name = att
+			value = root.court_policy_liege_attitude_to_adultery_4001
+		}
+	}
+	else = {
+		set_local_variable = {
+			name = att
+			value = court_policy_liege_a2a_general
+		}
+	}
+	# If sex is shunned, should not imprison. Can only imprison if attitude is
+	#  zero
+	local_var:att = 0
 }

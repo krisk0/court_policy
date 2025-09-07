@@ -4994,6 +4994,7 @@ health.1200 = {
 	}
 
 	immediate = {
+		error_log = "health.1200 works"
 
 		if = {
 			limit = { #Children, celibate characters, rejected_from_marriage_bed_modifier characters and characters without partners (or with sick partners) won't spread the disease
@@ -5085,6 +5086,8 @@ health.1201 = {
 	}
 
 	immediate = {
+		error_log = "health.1201 works"
+
 		if = {
 			limit = { #Children, celibate characters, rejected_from_marriage_bed_modifier characters and characters without partners (or with sick partners) won't spread the disease
 				OR = {
@@ -5174,6 +5177,8 @@ health.1202 = {
 	immediate = {
 		save_scope_as = disease_spreader
 
+		error_log = "health.1202 works"
+
 		save_health_court_owner_effect = { SCOPE_NAME = contagion_court_owner }
 
 		if = {
@@ -5260,6 +5265,8 @@ health.1203 = {
 
 	immediate = {
 		save_scope_as = disease_spreader
+
+		error_log = "health.1203 works"
 
 		save_health_court_owner_effect = { SCOPE_NAME = contagion_court_owner }
 

@@ -81,6 +81,31 @@ court_policy_liege_attitude_to_adultery = {
 	}
 }
 
+
+# Same as above, but adultery_spouse instead of owner and sex_partner instead
+#  of target
+court_policy_liege_attitude_to_adultery_4001 = {
+	if = {
+		limit = {
+		  scope:adultery_spouse = { is_close_family_of = scope:sex_partner }
+		}
+		value = court_policy_liege_a2a_related
+		if = {
+			# if homosexuality is forbidden, return zero
+			limit = { is_same_sex_as_4001 = yes }
+			max = court_policy_liege_a2a_samesex
+		}
+	}
+	else_if = {
+		limit = { is_same_sex_as_4001 = yes }
+		value = court_policy_liege_a2a_samesex
+	}
+	else = {
+		value = court_policy_liege_a2a_general
+	}
+}
+
+
 court_policy_liege_a2a_general = {
 	capital_province = {
 		if = {
@@ -160,4 +185,165 @@ court_policy_cancer_value = {
 			multiply = 2
 		}
 	}
+}
+
+# return compassion divided by 4, that should be hopefully -15 to 15 for most
+#  characters
+court_policy_compassion_for_vampire = {
+	value = ai_compassion
+	min = -100
+	max = 100
+	divide = 4
+	multiply = -1
+}
+
+court_policy_boldness = {
+	value = ai_boldness
+	min = -100
+	max = 100
+	divide = 4
+}
+
+court_policy_greed = {
+	value = ai_greed
+	min = -100
+	max = 100
+	divide = 4
+}
+
+court_policy_rationality = {
+	value = ai_rationality
+	min = -100
+	max = 100
+	divide = 3
+}
+
+court_policy_religion_likes_vampires = {
+	# simplification: only check if vampirism is accepted
+	value = -20
+	if = {
+		limit = { faith = { has_doctrine = doctrine_vampirism_accepted } }
+		value = 20
+	}
+	if = {
+		limit = { ai_zeal >= high_positive_ai_value }
+		multiply = 2
+	}
+}
+
+# zero add if under 40, else add (age - 40) / 4
+court_policy_age_for_vampire = {
+	value = ek_human_age_equivalent
+	subtract = 40
+	min = 0
+	divide = 4
+}
+
+# Returns chance that root is willing to contract sanguinare_vampiris. EK
+#  calculation: 10 + 40 if ambitious in ek_travel_events.4010
+court_policy_is_willing_to_become_vampire_chance = {
+	if = {
+		# immortal cannot become vampire
+		limit = {
+			OR = {
+				is_immortal = yes
+				has_trait = sanguinare_vampiris
+			}
+		}
+	}
+	else = {
+		value = 10
+		# ai_... personality modifiers
+		add = court_policy_greed
+		add = court_policy_boldness
+		add = court_policy_religion_likes_vampires
+		add = court_policy_compassion_for_vampire
+		# has rival => need to live longer
+		if = {
+			limit = { any_relation = { type = rival } }
+			add = 10
+		}
+		if = {
+			limit = { any_relation = { type = nemesis } }
+			add = 20
+		}
+		# getting older => more likely
+		add = court_policy_age_for_vampire
+		# liege is known to be vampire and root likes him
+		if = {
+			limit = {
+				exists = liege
+				knows_about_character_being_vampire_trigger = { CHARACTER = liege }
+				opinion = {
+					target = liege
+					value >= high_positive_opinion
+				}
+			}
+			add = 20
+		}
+		add = court_policy_vampire_friend_or_
+
+		# Additional modifier (such as child that no one else can care about)
+		# Commented out to silence error log
+		#if = {
+		#	limit = {
+		#		exists = scope:court_policy_convince
+		#	}
+		#	add = scope:court_policy_convince
+		#}
+
+		min = 0
+		max = 100
+	}
+}
+
+# Returns number between 0 and 100, more if a relative/friend/lover with good
+#  attitude is known as vampire
+court_policy_vampire_friend_or_ = {
+	if = {
+		limit = {
+			any_close_family_member = {
+				root = {
+					opinion = { target = prev value >= high_positive_opinion }
+					knows_about_character_being_vampire_trigger = { CHARACTER = prev }
+				}
+			}
+		}
+		add = 30
+	}
+	if = {
+		limit = {
+			any_relation = {
+				type = soulmate
+				root = {
+					knows_about_character_being_vampire_trigger = { CHARACTER = prev }
+				}
+			}
+		}
+		add = 40
+	}
+	if = {
+		limit = {
+			any_relation = {
+				type = lover
+				root = {
+					knows_about_character_being_vampire_trigger = { CHARACTER = prev }
+				}
+			}
+		}
+		add = 20
+	}
+	if = {
+		limit = {
+			any_relation = {
+				type = friend
+				root = {
+					opinion = { target = prev value >= high_positive_opinion }
+					knows_about_character_being_vampire_trigger = { CHARACTER = prev }
+				}
+			}
+		}
+		add = 25
+	}
+	max = 100
 }
