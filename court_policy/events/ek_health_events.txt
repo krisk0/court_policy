@@ -1,7 +1,8 @@
 ﻿namespace = ek_health
 
 ## court_policy changes:
-# events ek_health.0001 and ek_health.0002 do not automatically heal
+# events ek_health.0001 and ek_health.0002 do not automatically heal; turning
+#  into vampire heals most diseases; other changes
 
 ## Added this here to stop the error log freaking out about unknown triggers
 #Wounded 2
@@ -27,13 +28,9 @@ scripted_trigger ek_health_event_is_worried_trigger = {
 ek_health.0001 = {
 	hidden = yes
 
-	trigger = {
-		has_trait = sanies_lupinus
-	}
+	trigger = { has_trait = sanies_lupinus }
 
-	immediate = {
-		court_policy_maybe_heal = yes
-	}
+	immediate = { court_policy_maybe_heal = yes }
 }
 
 # Court policy: get treatment for sanguinare_vampiris, if physician exists and
@@ -41,9 +38,7 @@ ek_health.0001 = {
 ek_health.0002 = {
 	hidden = yes
 
-	trigger = {
-		has_trait = sanguinare_vampiris
-	}
+	trigger = { has_trait = sanguinare_vampiris }
 
 	immediate = {
 		error_log = "ek_health.0002 runs"
@@ -593,6 +588,7 @@ ek_health.2001 = {
 
 	immediate = {
 		give_lycan_secret_or_trait_effect = yes
+		# TODO: stress reduce?
 		remove_trait = sanies_lupinus
 	}
 
@@ -614,16 +610,19 @@ ek_health.2002 = {
 		animation = sick
 	}
 
-	trigger = {
-		has_trait = sanguinare_vampiris
-	}
+	trigger = { has_trait = sanguinare_vampiris }
 
 	immediate = {
+		# TODO: may get poisoned blood debuf instead of vampire transformation,
+		#  depending on age
 		give_vampire_secret_or_trait_effect = yes
-		# court_policy changes: heal diseases vampire is immune to, in accordance
+		# court_policy change: heal diseases vampire is immune to, in accordance
 		#  with Skyrim lore
-		#remove_trait = sanguinare_vampiris - no longer requred
+		#remove_trait = sanguinare_vampiris — no longer requred
 		magical_cure_disease = yes
+		#Health increased, diseases healed. Definitely stress should reduce
+		# court_policy change: reduce stress
+		court_policy_stress_reduction_of_newborn_vampire = yes
 	}
 
 	option = { # oh well

@@ -6,7 +6,7 @@
 # added new option to hire court physician
 
 ### Court policy note
-# do not heal sanguinare vampiris and/or sanies lupinus, if liege forbids
+# Handle sanguinare vampiris and sanies lupinus differently
 
 #Events managing health concerns
 

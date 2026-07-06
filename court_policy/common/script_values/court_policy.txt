@@ -20,9 +20,14 @@ court_policy_fm_sex = {
 				}
 			}
 			add = 50
+			if = {
+				limit = { has_doctrine = tenet_carnal_exaltation }
+				add = 50
+			}
 		}
 	}
 }
+
 
 court_policy_homosexual = {
 	faith = {
@@ -41,6 +46,7 @@ court_policy_homosexual = {
 	}
 }
 
+
 # simplification: only check if unrestricted incest allowed
 court_policy_incest = {
 	faith = {
@@ -53,13 +59,14 @@ court_policy_incest = {
 	}
 }
 
+
 # Runs in liege context. Available scopes:
 #  scope:owner
 #  scope:target
 #  scope:target_liege
 #  scope:capital -- capital barony
 # Returns 100 if liege allows, 0 if liege disallows, 50 if undecided
-# Simplification: distant relative sex is allowed
+# Simplification: distant relative sex is treated like unrelated sex
 court_policy_liege_attitude_to_adultery = {
 	if = {
 		limit = {
@@ -107,7 +114,7 @@ court_policy_liege_attitude_to_adultery_4001 = {
 
 
 court_policy_liege_a2a_general = {
-	capital_province = {
+	capital_province ?= {
 		if = {
 			limit = { has_variable = court_policy_fm_sex }
 			value = var:court_policy_fm_sex
@@ -119,8 +126,9 @@ court_policy_liege_a2a_general = {
 	}
 }
 
+
 court_policy_liege_a2a_samesex = {
-	capital_province = {
+	capital_province ?= {
 		if = {
 			limit = { has_variable = court_policy_homosexual }
 			value = var:court_policy_homosexual
@@ -132,8 +140,9 @@ court_policy_liege_a2a_samesex = {
 	}
 }
 
+
 court_policy_liege_a2a_related = {
-	capital_province = {
+	capital_province ?= {
 		if = {
 			limit = { has_variable = court_policy_incest }
 			value = var:court_policy_incest
@@ -144,6 +153,7 @@ court_policy_liege_a2a_related = {
 		}
 	}
 }
+
 
 # Called from health.1007 to calculate weight multiplier
 court_policy_cancer_value = {
@@ -187,49 +197,62 @@ court_policy_cancer_value = {
 	}
 }
 
-# return compassion divided by 4, that should be hopefully -15 to 15 for most
+
+# return compassion divided by -4, that should be hopefully -15 to 15 for most
 #  characters
 court_policy_compassion_for_vampire = {
 	value = ai_compassion
 	min = -100
 	max = 100
-	divide = 4
-	multiply = -1
+	multiply = -0.25
 }
+
 
 court_policy_boldness = {
 	value = ai_boldness
 	min = -100
 	max = 100
-	divide = 4
+	multiply = 0.25
 }
+
 
 court_policy_greed = {
 	value = ai_greed
 	min = -100
 	max = 100
-	divide = 4
+	multiply = 0.25
 }
+
 
 court_policy_rationality = {
 	value = ai_rationality
 	min = -100
 	max = 100
-	divide = 3
+	multiply = 0.33
 }
 
+
 court_policy_religion_likes_vampires = {
-	# simplification: only check if vampirism is accepted
+	# simplification: only check if vampirism is accepted or virtuous
 	value = -20
 	if = {
-		limit = { faith = { has_doctrine = doctrine_vampirism_accepted } }
+		limit = {
+			faith = { has_doctrine = doctrine_vampirism_accepted }
+		}
 		value = 20
+	}
+	else_if = {
+		limit = {
+			faith = { has_doctrine = doctrine_vampirism_virtuous }
+		}
+		value = 30
 	}
 	if = {
 		limit = { ai_zeal >= high_positive_ai_value }
 		multiply = 2
 	}
 }
+
 
 # zero add if under 40, else add (age - 40) / 4
 court_policy_age_for_vampire = {
@@ -239,17 +262,20 @@ court_policy_age_for_vampire = {
 	divide = 4
 }
 
+
 # Returns chance that root is willing to contract sanguinare_vampiris. EK
-#  calculation: 10 + 40 if ambitious in ek_travel_events.4010
+#  calculation: 10 + 40 if ambitious in ek_travel_events.4010. HEAVY.
+# Result can theoretically be less than 0 or more than 100.
 court_policy_is_willing_to_become_vampire_chance = {
 	if = {
-		# immortal cannot become vampire
 		limit = {
 			OR = {
-				is_immortal = yes
+				# briarheart, immortal, daedra
+				court_policy_can_contract_disease_trigger = no
 				has_trait = sanguinare_vampiris
 			}
 		}
+		# zero for immune or already infected
 	}
 	else = {
 		value = 10
@@ -283,17 +309,14 @@ court_policy_is_willing_to_become_vampire_chance = {
 		}
 		add = court_policy_vampire_friend_or_
 
-		# Additional modifier (such as child that no one else can care about)
-		# Commented out to silence error log
-		#if = {
-		#	limit = {
-		#		exists = scope:court_policy_convince
-		#	}
-		#	add = scope:court_policy_convince
-		#}
-
-		min = 0
-		max = 100
+		# Additional modifier (such as child that no one else can care about, god
+		#  influence, …)
+		if = {
+			limit = {
+				exists = scope:court_policy_desire_to_become_vampire
+			}
+			add = scope:court_policy_desire_to_become_vampire
+		}
 	}
 }
 
@@ -322,7 +345,7 @@ court_policy_vampire_friend_or_ = {
 		}
 		add = 40
 	}
-	if = {
+	else_if = {
 		limit = {
 			any_relation = {
 				type = lover
@@ -336,6 +359,18 @@ court_policy_vampire_friend_or_ = {
 	if = {
 		limit = {
 			any_relation = {
+				type = best_friend
+				root = {
+					opinion = { target = prev value >= high_positive_opinion }
+					knows_about_character_being_vampire_trigger = { CHARACTER = prev }
+				}
+			}
+		}
+		add = 30
+	}
+	else_if = {
+		limit = {
+			any_relation = {
 				type = friend
 				root = {
 					opinion = { target = prev value >= high_positive_opinion }
@@ -346,4 +381,81 @@ court_policy_vampire_friend_or_ = {
 		add = 25
 	}
 	max = 100
+}
+
+
+# Returns number between -1000 and 100, more if willing to have situational sex
+court_policy_spontaneous_sex_desire = {
+	if = {
+		limit = {
+			OR = {
+				has_trait = celibate
+				is_eunuch_trigger = yes
+			}
+		add = -1000
+	}
+	else_if = {
+		limit = { has_trait = chaste }
+		add = -50
+	}
+	else = {
+		value = stress
+		if = {
+			limit = { has_trait = lustful }
+			add = 50
+		}
+		if = {
+			limit = { has_trait = rakish }
+			add = 50
+		}
+		if = {
+			limit = { has_trait = devoted }
+			add = {
+				value = court_policy_fm_sex
+				multiply = 0.33
+			}
+			# 33 if devoted and religion 100% approves free sex
+		}
+		if = {
+			limit = { has_trait = seducer }
+			# Just wanna practice
+			add = 40
+		}
+		if = {
+			limit = { is_deviant_trigger = yes }
+			add = 40
+		}
+		max = 100
+	}
+}
+
+
+# same as court_policy_spontaneous_sex_desire, but -1000 if can spread disease
+court_policy_spontaneous_sex_desire_if_healthy = {
+	if = {
+		limit = { has_std_trigger = yes }
+		add = -1000
+	}
+	else = {
+		add = court_policy_spontaneous_sex_desire
+	}
+}
+
+
+# Additive modifier to be applied to court_policy_spontaneous_sex_desire value,
+#  based on attitude and health status.
+# Available scopes:
+#  scope:partner
+court_policy_sex_desire_modifier = {
+	add = {
+		value = "opinion(scope:partner)"
+		multiply = 0.33
+	}
+	if = {
+		limit = {
+			scope:partner = { has_std_trigger = yes }
+		}
+		# Disease might spread
+		add = -90
+	}
 }

@@ -1,7 +1,10 @@
 ﻿# simplification: do not check if lycanthrophy is shunned, just yes or no
 court_policy_heal_lycanthrope = {
 	faith = {
-		NOT = { has_doctrine = doctrine_lycanthropy_accepted }
+		NOR = {
+			has_doctrine = doctrine_lycanthropy_accepted
+			has_doctrine = doctrine_lycanthropy_virtuous
+		}
 	}
 }
 
@@ -9,15 +12,18 @@ court_policy_heal_lycanthrope = {
 # simplification: do not check if vampirism is shunned, just yes or no
 court_policy_heal_vampire = {
 	faith = {
-		NOT = { has_doctrine = doctrine_vampirism_accepted }
+		NOT = {
+			has_doctrine = doctrine_vampirism_accepted
+			has_doctrine = doctrine_vampirism_virtuous
+		}
 	}
 }
 
 
 is_a_capital = {
-	exists = province_owner
-	province_owner = { capital_province = prev }
+	province_owner ?= { capital_province = prev }
 }
+
 
 # yes iff scope:owner and scope:target are of same sex
 is_same_sex_as = {
@@ -69,20 +75,10 @@ court_policy_heal_courtier_or_self = {
 #  scope:disease_type
 court_policy_heal_em = {
 	trigger_if = {
-		limit = { NOT = { exists = capital_province } }
-		# Liege just lost his status, or is unlanded.
-		# No capital, no ambulance, no way to heal sanguinare_vampiris or
-		#  sanies_lupinus, but can attempt to heal other diseases
-		NOR = {
-			scope:disease_type = flag:sanguinare_vampiris
-			scope:disease_type = flag:sanies_lupinus
-		}
-	}
-	trigger_if = {
 		limit = { scope:disease_type = flag:sanguinare_vampiris }
 		court_policy_heal_vampire_uncache = yes
 	}
-	trigger_if = {
+	trigger_else_if = {
 		limit = { scope:disease_type = flag:sanies_lupinus }
 		court_policy_heal_lycanthrope_uncache = yes
 	}
@@ -92,7 +88,7 @@ court_policy_heal_em = {
 
 
 court_policy_heal_vampire_uncache = {
-	capital_province = {
+	capital_province ?= {
 		# TODO: how to return value of yes-no variable? Here and in trigger below
 		trigger_if = {
 			limit = { var:court_policy_heal_vampire ?= yes }
@@ -107,11 +103,12 @@ court_policy_heal_vampire_uncache = {
 			prev = { court_policy_heal_vampire = yes }
 		}
 	}
+	# If no capital province, then no healing
 }
 
 
 court_policy_heal_lycanthrope_uncache = {
-	capital_province = {
+	capital_province ?= {
 		trigger_if = {
 			limit = { var:court_policy_heal_lycanthrope ?= yes }
 			always = yes
@@ -125,6 +122,7 @@ court_policy_heal_lycanthrope_uncache = {
 			prev = { court_policy_heal_lycanthrope = yes }
 		}
 	}
+	# If no capital province, then no healing
 }
 
 
@@ -133,34 +131,107 @@ court_policy_heal_lycanthrope_uncache = {
 #  scope:sex_partner (optional)
 #  scope:unsuccessful_sex_attempt (optional)
 # Called either in context of scope:adultery_spouse or scope:sex_partner
-## court_policy changes: return no if court policy allows the kind of sex that
-##  occured
+#
+# court_policy changes: return no if court policy allows the kind of sex that
+#  occured
 adultery_4001_can_be_imprisoned_trigger = {
+	# TODO: check error_log for adultery_4001
+	#  adultery_4001_can_be_imprisoned_trigger
 	# If no capital province, then cannot imprison
 	exists = root.capital_province
+	# If error_log is not spammed, then need to drag file events/relations_events/adultery_events.txt
+	error_log = "adultery_4001_can_be_imprisoned_trigger overridden"
 	# If not my subject, cannot imprison
 	root = { allowed_to_imprison_character_trigger = { CHARACTER = prev } }
 	if = {
 		# If partner is known
-		limit = { exists = scope:sex_partner }
-		OR = {
-			# … either this is cheating spouse, …
-			this = scope:adultery_spouse
-			# … or this is sex_partner who really had sex
-			NOT = { exists = scope:unsuccessful_sex_attempt }
+		limit = {
+			exists = scope:sex_partner
+			OR = {
+				# … either this is cheating spouse, …
+				this = scope:adultery_spouse
+				# … or this is sex_partner who really had sex
+				NOT = { exists = scope:unsuccessful_sex_attempt }
+			}
 		}
-		set_local_variable = {
+		save_temporary_scope_value_as = {
 			name = att
 			value = root.court_policy_liege_attitude_to_adultery_4001
 		}
 	}
 	else = {
-		set_local_variable = {
+		save_temporary_scope_value_as = {
 			name = att
-			value = court_policy_liege_a2a_general
+			# Assume that was sex with a proper partner
+			value = root.court_policy_liege_a2a_general
 		}
 	}
-	# If sex is shunned, should not imprison. Can only imprison if attitude is
-	#  zero
-	local_var:att = 0
+	# If sex is shunned, should not imprison. Can only imprison if att=0
+	scope:att = 0
+}
+
+
+# Return yes iff root can contract sanguinare_vampiris and sanies_lupinus, and
+#  become vampire and lycanthrope.
+# Produces same result as
+#  can_contract_disease_trigger = { DISEASE = sanguinare_vampiris }
+# , unless
+#   contraction_cooldown_general is set or
+#   character has modifier poisoned_blood or
+#   character is briarheart
+# Briarheart can contract the disease, but cannot become vampire. Thus return no
+#  for briarheart.
+court_policy_can_contract_disease_trigger = {
+	NOR = {
+		has_character_flag = immune_to_disease
+		has_trait_with_flag = immune_to_disease
+		has_character_flag = race_daedra
+		is_briarheart = no
+		#poisoned_blood currently unused, no event sets it
+		#has_character_modifier = poisoned_blood
+	}
+}
+
+
+# Run in context of a character who potentially will marry. Assume homosexuality
+#  is not strictly forbidden. Return yes iff this is boss or boss's court
+#  policy approves.
+court_policy_allows_same_sex_marriage = {
+	OR = {
+		# Allow yourself everything
+		is_ruler = yes
+		# liege must exist, must have chosen his policy, the policy must 100%
+		#  approve same sex relation.
+		liege.capital_province.var:court_policy_homosexual ?= 100
+	}
+}
+
+
+# Run in contect of liege
+court_policy_allows_free_sex = {
+	capital_province.var:court_policy_fm_sex ?= 100
+}
+
+
+# Returns yes if seduction is forbidden due to being young and sharing blood
+# Parameters:
+#  $SEDUCER$
+#  $TARGET$
+guaranteed_under_20_incest_rejection_trigger = {
+	# If boss of one of them allows incest, then return no
+	NOR = {
+		# 50 = there is no strict ban, maybe boss will stop a seduce scheme, maybe not
+		# 100 = allowed, boss will never stop a seduce scheme
+		$SEDUCER$.liege ?= { court_policy_liege_a2a_related >= 50 }
+		$TARGET$.liege ?= { court_policy_liege_a2a_related >= 50 }
+	}
+	# vanilla. 16yo girl can seduce her twin brother or twin sister. 17yo not
+	#  allowed to seduce her 16yo relative
+	$TARGET$ = {
+		NOT = { is_consort_of = $SEDUCER$ }
+		is_close_or_extended_family_of = $SEDUCER$
+		age < 20
+		age < $SEDUCER$.age
+		is_ai = yes #Players are allowed to choose
+	}
 }

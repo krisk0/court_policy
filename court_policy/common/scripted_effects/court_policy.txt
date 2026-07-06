@@ -60,6 +60,7 @@ court_policy_cfg = {
 	}
 }
 
+
 court_policy_sanitize = {
 	clamp_variable = {
 		name = court_policy_homosexual
@@ -70,6 +71,7 @@ court_policy_sanitize = {
 		max = var:court_policy_fm_sex
 	}
 }
+
 
 court_policy_cfg_from_faith = {
 	scope:court = {
@@ -117,6 +119,7 @@ court_policy_cfg_from_faith = {
 	}
 }
 
+
 court_policy_cfg_rational = {
 	scope:court = {
 		set_variable = {
@@ -129,6 +132,7 @@ court_policy_cfg_rational = {
 		}
 	}
 }
+
 
 court_policy_cfg_stupid = {
 	scope:court = {
@@ -144,12 +148,13 @@ court_policy_cfg_stupid = {
 			name = court_policy_incest
 			value = 50
 		}
-		random_bool = { WHAT = court_policy_heal_lycanthrope }
-		random_bool = { WHAT = court_policy_heal_vampire }
+		court_policy_random_bool = { WHAT = court_policy_heal_lycanthrope }
+		court_policy_random_bool = { WHAT = court_policy_heal_vampire }
 	}
 }
 
-random_bool = {
+
+court_policy_random_bool = {
 	set_variable = $WHAT$
 	random = {
 		chance = 50
@@ -159,6 +164,7 @@ random_bool = {
 		}
 	}
 }
+
 
 court_policy_toggle = {
 	if = {
@@ -195,6 +201,7 @@ court_policy_toggle = {
 	}
 }
 
+
 court_policy_toggle_integer = {
 	change_variable = {
 		name = $WHAT$
@@ -209,6 +216,7 @@ court_policy_toggle_integer = {
 	}
 }
 
+
 court_policy_toggle_bool = {
 	if = {
 		limit = { var:$WHAT$ = yes }
@@ -221,6 +229,7 @@ court_policy_toggle_bool = {
 		set_variable = $WHAT$
 	}
 }
+
 
 # Garbage collection once every 5 years. Complexity: O(baronies count)
 court_policy_garbage_collection = {
@@ -237,39 +246,39 @@ court_policy_garbage_collection = {
 	}
 }
 
-# They say unused scripts are not loaded to memory. Thus no need to comment-out
-#  the script.
-court_policy_dump_baronies = {
-	capital_county.title_province = {
-		prev.capital_province = {
-			court_policy_show_province = yes
-		}
-	}
-	error_log = "that was capital, now other provinces"
-	every_realm_province = {
-		# all provinces including capital
-		court_policy_show_province = yes
-	}
-}
 
-court_policy_show_province = {
-	province_owner ?= { error_log = court_policy_owner_is }
-	error_log = court_policy_province_is
-	if = {
-		limit = { has_variable = court_policy_fm_sex }
-		error_log = "has variable"
-	}
-	else = {
-		error_log = "no variable"
-	}
-	if = {
-		limit = { is_a_capital = yes }
-		error_log = "is a capital"
-	}
-	else = {
-		error_log = "is not a capital"
-	}
-}
+#court_policy_dump_baronies = {
+#	capital_county.title_province = {
+#		prev.capital_province = {
+#			court_policy_show_province = yes
+#		}
+#	}
+#	error_log = "that was capital, now other provinces"
+#	every_realm_province = {
+		# all provinces including capital
+#		court_policy_show_province = yes
+#	}
+#}
+
+
+#court_policy_show_province = {
+#	province_owner ?= { error_log = court_policy_owner_is }
+#	error_log = court_policy_province_is
+#	if = {
+#		limit = { has_variable = court_policy_fm_sex }
+#		error_log = "has variable"
+#	}
+#	else = {
+#		error_log = "no variable"
+#	}
+#	if = {
+#		limit = { is_a_capital = yes }
+#		error_log = "is a capital"
+#	}
+#	else = {
+#		error_log = "is not a capital"
+#	}
+#}
 
 
 # Runs in context of sick character.
@@ -279,16 +288,15 @@ court_policy_show_province = {
 #  scope:sick_character
 # Maybe get rid of sanies_lupinus or sanguinare_vampiris, physician might get
 #  the disease and/or experience or die due to health decrease. Some chance
-#  calculations inspired by mystic_disease_treatment_effect
+#  calculations inspired by mystic_disease_treatment_effect and
+#  risky_disease_treatment_effect
 court_policy_ongoing_treatment = {
 	save_temporary_scope_value_as = {
 		name = cp_which_disease
 		value = scope:disease_type
 	}
 
-	scope:physician = {
-		mystic_level_up_chance_effect = { CHANCE = 15 }
-	}
+	scope:physician = { mystic_level_up_chance_effect = { CHANCE = 15 } }
 
 	random_list = {
 		1 = { #Success
@@ -375,12 +383,14 @@ court_policy_ongoing_treatment = {
 						}
 						factor = 2
 					}
+					# Piece below is from risky_disease_treatment_effect because it looks
+					#  strange in mystic_disease_treatment_effect
 					modifier = {
 						scope:physician = {
 							has_trait = lifestyle_physician
 							has_trait_xp = {
 								trait = lifestyle_physician
-								value >= 50
+								value >= 100
 							}
 						}
 						factor = 3
@@ -388,9 +398,7 @@ court_policy_ongoing_treatment = {
 
 					# Liege Perk bonus
 					modifier = {
-						scope:physician.liege = {
-							has_perk = anatomical_studies_perk
-						}
+						scope:physician.liege = { has_perk = anatomical_studies_perk }
 						factor = 2
 					}
 					court_policy_ongoing_treatment_success = { CHANCE = 100 }
@@ -403,9 +411,7 @@ court_policy_ongoing_treatment = {
 		10 = { #Failure
 		}
 		5 = { #Failure on purpose
-			trigger = {
-				court_physician_can_fail_on_purpose_trigger = yes
-			}
+			trigger = { court_physician_can_fail_on_purpose_trigger = yes }
 			modifier = {
 				OR = {
 					has_relation_rival = scope:physician
@@ -430,17 +436,33 @@ court_policy_ongoing_treatment = {
 	}
 
 	# TODO: willing to become lycantrope?
-	# Do it after treatment so physician does not die too early from health drop
+	# Physician gets infected after treatment so as not to die too early from
+	#  health drop
 	scope:physician = {
 		if = {
-			limit = { scope:cp_which_disease = flag:sanguinare_vampiris }
+			limit = {
+				scope:cp_which_disease = flag:sanguinare_vampiris
+				court_policy_can_contract_disease_trigger = yes
+			}
+			save_temporary_value_as = {
+				name = court_policy_desire_to_become_vampire
+				# Those scientists are so brave
+				value = {
+					if = {
+						limit = { has_trait = experimentalist }
+						add = 15
+					}
+					if = {
+						limit = { has_trait = experimentalist_necromancer }
+						add = 15
+					}
+				}
+			}
 			# 'chance = expression' does not work? Avoid it and use chance = 0
 			#  with modifier = { add ... }
 			random = {
 				chance = 0
-				modifier = {
-					add = court_policy_is_willing_to_become_vampire_chance
-				}
+				modifier = { add = court_policy_is_willing_to_become_vampire_chance }
 				court_policy_contract_disease = { DISEASE = sanguinare_vampiris }
 			}
 		}
@@ -451,16 +473,12 @@ court_policy_ongoing_treatment = {
 court_policy_ongoing_treatment_success = {
 	random_list = {
 		0 = {
-			modifier = {
-				add = $CHANCE$
-			}
+			modifier = { add = $CHANCE$ }
 			court_policy_remove_useful_disease = yes
 			clear_saved_scope = disease_type
 		}
 		100 = {
-			modifier = {
-				add = -$CHANCE$
-			}
+			modifier = { add = -$CHANCE$ }
 			# 20% chance to contract the useful disesase
 			random = {
 				chance = 20
@@ -522,6 +540,10 @@ court_policy_maybe_heal = {
 	if = {
 		# No physician, or court policy disallows -- no treatment
 		limit = {
+			OR = {
+				scope:disease_type ?= flag:sanies_lupinus
+				scope:disease_type ?= flag:sanguinare_vampiris
+			}
 			court_physician_available_trigger = yes
 			court_policy_heal_courtier_or_self = yes
 		}
@@ -534,18 +556,14 @@ court_policy_maybe_heal = {
 		#  chance to heal the diseases if root is being successfully treated
 		#  already.
 		if = {
-			limit = {
-				has_good_disease_treatment_trigger = yes
-			}
+			limit = { has_good_disease_treatment_trigger = yes }
 			court_policy_ongoing_treatment = yes
 		}
 		if = {
 			# on success, court_policy_ongoing_treatment unsets scope:disease_type
 			limit = { exists = scope:disease_type }
 			if = {
-				limit = {
-					is_landed = yes
-				}
+				limit = { is_landed = yes }
 				error_log = "_maybe_heal: landed"
 				# health.3101: choose healing variant for yourself.
 				trigger_event = health.3101
@@ -586,4 +604,63 @@ court_policy_contract_disease = {
 			court_policy_maybe_heal = yes
 		}
 	}
+}
+
+
+# If physician is here and capable, save them as scope:$TGT$
+court_policy_is_physician_here = {
+	court_owner ?= {
+		any_court_position_holder = {
+			type = court_physician_court_position
+			is_physically_able = yes
+			root.location = location
+			save_scope_as = $TGT$
+		}
+	}
+}
+
+
+# Reduce stress when turned to vampire
+court_policy_stress_reduction_of_newborn_vampire = {
+	add_stress = medium_stress_loss
+	stress_impact = {
+		brave = massive_stress_loss
+		rational = massive_stress_loss
+	}
+}
+
+
+physician_lifestyle_rank_up_effect = {
+	if = {
+		limit = {
+			NOT = { has_trait = lifestyle_physician }
+		}
+		add_trait = lifestyle_physician
+	}
+	else_if = {
+		limit = {
+			has_trait_xp = {
+				trait = lifestyle_physician
+				value < 100
+			}
+		}
+		add_trait_xp = {
+			trait = lifestyle_physician
+			value = 10
+		}
+	}
+	# court_policy addition start
+	# progress in magic or learning
+	else_if = {
+		# If magic lifestyle, get experience
+		limit = { has_lifestyle = magic_lifestyle }
+		add_magic_lifestyle_xp = 100
+	}
+	else = {
+		random_list = {
+			95 = { add_learning_lifestyle_xp = 100 }
+			5 = { add_learning_skill = 1 }
+		}
+	}
+	# court_policy addition end
 }
